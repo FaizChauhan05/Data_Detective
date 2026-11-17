@@ -1,4 +1,12 @@
 import polars as pl
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.ensemble import IsolationForest
 
 def profiling_dataframe(df):
     profile = pl.DataFrame({

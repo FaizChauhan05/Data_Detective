@@ -5,6 +5,7 @@ import streamlit as st
 
 from profiling import profiling_dataframe, profile_numeric, profile_duplicates
 from overview import overview_profile
+from analysis.anomaly_detection import detect_anomalies
 
 st.set_page_config(page_title="AI Data Detective", layout="wide")
 
