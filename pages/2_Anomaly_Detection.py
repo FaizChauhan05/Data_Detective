@@ -61,32 +61,49 @@ if dataset_name in st.session_state.anomaly_results:
     )
 
     fig.update_traces(
-        textinfo = "percent+label",
-        hovertemplate = "%(label): %{value} records<extra></extra>"
+    textinfo="percent+label",
+    hovertemplate=(
+        "<b>%{label}</b><br>"
+        "Records: %{value:,}<br>"
+        "Percentage: %{percent}"
+        "<extra></extra>"
+    )
+)
+
+    fig.update_layout(
+        xaxis = dict(fixedrange = True),
+        yaxis = dict(fixedrange = True),
     )
 
-    st.plotly_chart(fig, width = 'stretch')
+    st.plotly_chart(fig, width = 'stretch', config = {"editable": False})
 
 
     st.subheader("Anomaly Score Distribution")
 
     fig = px.histogram(
-        result.to_pandas(),
-        x = "Anomaly Score",
-        color = "Anomaly",
-        nbins = 40,
-        marginal = "box",
-        title = "Distribution of Anomaly Scores",
-        opacity = 0.75
+    result.to_pandas(),
+    x="Anomaly Score",
+    color="Anomaly",
+    nbins=40,
+    title="Distribution of Anomaly Scores",
+    opacity=0.75
+)
+
+    fig.update_traces(
+        hovertemplate=(
+            "Anomaly Score: %{x:.4f}<br>"
+            "Records: %{y}"
+            "<extra></extra>"
+        )
     )
 
     fig.update_layout(
-        xaxis_title = "Anomaly Score",
-        yaxis_title = "Number of Records",
-        legend_title = "Classification"
+        xaxis_title="Anomaly Score",
+        yaxis_title="Number of Records",
+        legend_title="Classification"
     )
 
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, width='stretch', config = {"editable": False})
 
     st.subheader('Feature Comparison')
 
@@ -111,16 +128,30 @@ if dataset_name in st.session_state.anomaly_results:
             )
 
             fig = px.scatter(
-                result.to_pandas(),
-                x=x_axis,
-                y=y_axis,
-                color="Anomaly",
-                hover_data=["Anomaly Score"],
-                title=f"{x_axis} vs {y_axis}",
-                opacity=0.75
-            )
+            result.to_pandas(),
+            x=x_axis,
+            y=y_axis,
+            color="Anomaly",
+            custom_data=["Anomaly Score"],
+            title=f"{x_axis} vs {y_axis}",
+            opacity=0.75
+        )
 
-        st.plotly_chart(fig, width="stretch")
+        fig.update_traces(
+            hovertemplate=(
+                f"{x_axis}: %{{x:.2f}}<br>"
+                f"{y_axis}: %{{y:.2f}}<br>"
+                "Anomaly Score: %{customdata[0]:.4f}"
+                "<extra></extra>"
+            )
+        )
+
+        fig.update_layout(
+            xaxis=dict(fixedrange=True),
+            yaxis=dict(fixedrange=True)
+        )
+
+        st.plotly_chart(fig, width="stretch", config = {"editable": False})
     else:
         st.info("At least two numerical columns are required.")
 
