@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Detective</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark">D</span><span>data detective<small>DATA WORKSPACE</small></span></a>
+    <div class="nav-label">WORKSPACE</div>
+    <button class="nav-item active" data-page="overview"><span>▦</span> Overview</button>
+    <button class="nav-item" data-page="cleaning"><span>⌁</span> Data cleaning</button>
+    <button class="nav-item" data-page="anomalies"><span>◌</span> Anomaly detection</button>
+    <div class="sidebar-bottom"><div class="status-dot"></div><span>Local workspace</span><span class="version">v1.0</span></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><div class="eyebrow">PERSONAL DATA WORKSPACE</div><div class="top-title" id="page-title">Overview</div></div><div class="top-actions"><span class="saved-state"><i></i> Session storage</span><label class="button button-dark upload-button">Upload dataset<input id="file-input" type="file" accept=".csv,.xlsx,.xls" multiple hidden></label></div></header>
+    <div class="content">
+      <section class="page active" id="page-overview">
+        <div class="page-intro"><div><h1>Your data, at a glance.</h1><p>Upload a dataset to inspect its structure, quality and key statistics.</p></div><div class="dataset-count" id="dataset-count">0 datasets</div></div>
+        <div class="metric-grid" id="overview-metrics"><div class="metric-card"><span>DATASETS</span><strong>0</strong><small>In this session</small></div><div class="metric-card"><span>TOTAL ROWS</span><strong>—</strong><small>Across datasets</small></div><div class="metric-card"><span>MISSING VALUES</span><strong>—</strong><small>Null cells</small></div><div class="metric-card"><span>COMPLETENESS</span><strong>—</strong><small>Overall data completeness</small></div></div>
+        <div class="section-heading"><div><h2>Datasets</h2><p>Select a dataset to inspect its profile.</p></div></div>
+        <div class="panel table-panel"><div class="empty-state" id="empty-state"><div class="empty-icon">＋</div><h3>No datasets yet</h3><p>Upload a CSV or Excel file to get started.</p><label class="button button-outline">Choose a file<input type="file" accept=".csv,.xlsx,.xls" multiple hidden class="empty-upload"></label></div><div id="dataset-table-wrap" class="hidden"></div></div>
+        <div id="profile-section" class="hidden">
+          <div class="section-heading"><div><h2 id="profile-name">Dataset profile</h2><p>Structure and quality overview of the original upload.</p></div></div>
+          <div class="two-column profile-charts">
+            <div class="panel" id="distribution-panel">
+              <div class="panel-heading"><div><h3>Data distribution</h3><p class="muted">Explore the most common values in a column.</p></div></div>
+              <label class="field-label chart-select">COLUMN<select id="distribution-column"></select></label>
+              <div id="distribution-chart" class="chart-small"></div>
+            </div>
+            <div class="panel" id="missing-panel">
+              <div class="panel-heading"><div><h3>Missing values</h3><p class="muted">Missing cells by column.</p></div></div>
+              <div id="missing-chart" class="chart-small"></div>
+            </div>
+          </div>
+          <p id="missing-status" class="quality-status hidden"></p>
+          <div class="panel spaced"><div class="panel-heading"><div><h3>Data preview</h3><p class="muted" id="preview-note"></p></div></div><div id="data-preview" class="table-scroll preview-scroll"></div></div>
+        </div>
+      </section>
+      <section class="page" id="page-cleaning">
+        <div class="page-intro"><div><h1>Data cleaning</h1><p>Make controlled changes while keeping the original upload untouched.</p></div></div>
+        <div class="toolbar-panel"><label class="field-label">DATASET<select id="clean-dataset"><option value="">Select a dataset</option></select></label><div class="toolbar-buttons"><button class="button button-outline" id="undo-btn" disabled>Undo</button><button class="button button-outline" id="redo-btn" disabled>Redo</button><button class="button button-outline" id="reset-btn" disabled>Reset</button></div></div>
+        <div id="clean-workspace" class="hidden">
+          <div class="panel"><div class="panel-heading"><div><h3>Change column type</h3><p class="muted">Values that cannot be converted become empty.</p></div></div><div class="inline-form"><label class="field-label">COLUMN<select id="type-column"></select></label><label class="field-label">NEW TYPE<select id="type-value"><option>String</option><option>Integer</option><option>Float</option><option>Boolean</option><option>Date</option></select></label><button class="button button-dark" id="apply-type">Apply type</button></div></div>
+          <div class="panel spaced"><div class="panel-heading"><div><h3>Edit data</h3><p class="muted">Edit visible cells, then apply your changes. First 100 rows shown.</p></div><button class="button button-outline" id="save-edits">Apply edits</button></div><div id="edit-table" class="table-scroll"></div></div>
+          <div class="two-column spaced"><div class="panel"><div class="panel-heading"><h3>Cleaning history</h3></div><div id="clean-history" class="history-list muted">No changes yet.</div></div><div class="panel"><div class="panel-heading"><h3>Export cleaned dataset</h3></div><p class="muted">Download the current cleaned version.</p><div class="export-row"><select id="export-format"><option value="csv">CSV</option><option value="xlsx">Excel (.xlsx)</option><option value="parquet">Parquet</option></select><button class="button button-dark" id="export-btn">Download</button></div></div></div>
+        </div>
+        <div id="clean-empty" class="panel empty-inline">Upload a dataset from the Overview page to begin cleaning.</div>
+      </section>
+      <section class="page" id="page-anomalies">
+        <div class="page-intro"><div><h1>Anomaly detection</h1><p>Find unusual records using Isolation Forest.</p></div></div>
+        <div class="toolbar-panel"><label class="field-label">DATASET<select id="anomaly-dataset"><option value="">Select a dataset</option></select></label><button class="button button-dark" id="run-anomaly">Run detection</button></div>
+        <div id="anomaly-output" class="hidden">
+          <div class="metric-grid" id="anomaly-metrics"></div>
+          <div class="two-column spaced"><div class="panel"><div class="panel-heading"><h3>Record classification</h3></div><div id="anomaly-pie" class="chart-medium"></div></div><div class="panel"><div class="panel-heading"><h3>Anomaly score distribution</h3></div><div id="anomaly-hist" class="chart-medium"></div></div></div>
+          <div class="panel spaced"><div class="panel-heading"><div><h3>Feature comparison</h3><p class="muted">Explore two numerical features and identify unusual records.</p></div></div><div class="inline-form"><label class="field-label">X AXIS<select id="scatter-x"></select></label><label class="field-label">Y AXIS<select id="scatter-y"></select></label></div><div id="anomaly-scatter" class="chart-large"></div></div>
+          <div class="panel spaced"><div class="panel-heading"><h3>Flagged records</h3><span class="muted" id="anomaly-count-label"></span></div><div id="anomaly-table" class="table-scroll"></div></div>
+        </div>
+        <div id="anomaly-empty" class="panel empty-inline">Select a dataset and run anomaly detection to see the results.</div>
+      </section>
+    </div>
+    <div class="toast" id="toast"></div>
+  </main>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

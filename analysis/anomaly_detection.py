@@ -1,41 +1,43 @@
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import IsolationForest
 
-def detect_anomalies(df):
-    numeric_df = df.select(cs.numeric())
-    numeric_df = numeric_df.with_columns(cs.float().fill_nan(None))
 
-    # Remove completely empty columns and impute remaining nulls
-    for col in numeric_df.columns:
-        if numeric_df[col].null_count() == numeric_df.height:
-            numeric_df = numeric_df.drop(col)
-        else:
-            numeric_df = numeric_df.with_columns(
-                pl.col(col).fill_null(numeric_df[col].median())
-            )
+def detect_anomalies(df: pl.DataFrame, contamination: float = 0.05) -> pl.DataFrame:
+    if df.height < 5:
+        raise ValueError("At least 5 rows are required for anomaly detection.")
 
-    if numeric_df.width == 0:
-        raise ValueError("No usable numerical columns found.")
+    numeric = df.select(cs.numeric())
+    if numeric.width == 0:
+        raise ValueError("This dataset has no numeric columns to analyse.")
 
-    data = numeric_df.to_numpy()
+    numeric = numeric.with_columns(cs.float().fill_nan(None))
+    usable = []
+    for col in numeric.columns:
+        series = numeric[col]
+        if series.null_count() < numeric.height and series.n_unique() > 1:
+            median = series.median()
+            numeric = numeric.with_columns(pl.col(col).fill_null(median))
+            usable.append(col)
 
-    model = IsolationForest(contamination=0.05, random_state=42)
-    model.fit(data)
+    numeric = numeric.select(usable)
+    if numeric.width == 0:
+        raise ValueError("No usable numeric columns remain after removing empty or constant columns.")
 
-    predictions = model.predict(data)
-    decision_scores = model.decision_function(data)
+    values = numeric.to_numpy().astype(float)
+    if not np.isfinite(values).all():
+        raise ValueError("Numeric data contains infinite values. Clean these values before running detection.")
 
-    anomaly_labels = np.where(predictions == -1, "Anomaly", "Normal")
+    model = IsolationForest(contamination=contamination, random_state=42)
+    model.fit(values)
+    predictions = model.predict(values)
+    scores = model.decision_function(values)
+    labels = np.where(predictions == -1, "Anomaly", "Normal")
 
-    df = df.with_columns(
-        pl.Series("Anomaly", anomaly_labels),
-        pl.Series("Anomaly Score", decision_scores)
+    # Replace old result columns if the analysis is run again.
+    output = df.drop([c for c in ["Anomaly", "Anomaly Score"] if c in df.columns])
+    return output.with_columns(
+        pl.Series("Anomaly", labels),
+        pl.Series("Anomaly Score", scores)
     )
-
-    return df
-
