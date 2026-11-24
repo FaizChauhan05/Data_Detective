@@ -2,6 +2,8 @@
 
 A small personal data profiling and cleaning application built with plain HTML, CSS and JavaScript, backed by Python and FastAPI.
 
+Hosted On Render: https://datadetective-yobr.onrender.com
+
 ## Stack
 AI was only used for the Frontend
 
